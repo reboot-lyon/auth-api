@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+    db:
+        container_name: rebootAuth-db
+        build:
+            context: ./db
+            dockerfile: Dockerfile
+            target: DEV
+        volumes:
+            - ./db/data:/data/db:rw
+        ports:
+            - 27017:27017
+    app:
+        container_name: rebootAuth-app
+        build:
+            context: ./app
+            dockerfile: Dockerfile
+            target: DEV
+        environment:
+            - MONGODB_URI=mongodb://db:27017/api
+        restart: unless-stopped
+        ports:
+            - 3000:3000
+        depends_on:
+            - db

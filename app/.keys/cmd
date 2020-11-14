@@ -1,0 +1,2 @@
+ssh-keygen -t rsa -b 4096 -e -m PEM -f YOUR_PATH_TO_FOLDER -N ""
+openssl rsa -in PRIVATE_KEY_PATH -pubout -outform PEM -out PUBLIC_KEY_PATH
