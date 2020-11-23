@@ -41,7 +41,7 @@ TokenSchema.methods.refresh = function(perms: string): Promise<IToken> {
 
 TokenSchema.methods.sign = function(): Promise<IToken> {
     return (new Promise((resolve: (token: IToken) => void, reject: (err: any) => void): void => {
-        jwt.sign({ id: this.user, scope: this.perms }, PRIV_KEY, { algorithm: 'RS256', expiresIn: TOKEN_EXP }, (err: Error | null, token: string | undefined) => {
+        jwt.sign({ id: this._id, scope: this.perms }, PRIV_KEY, { algorithm: 'RS256', expiresIn: TOKEN_EXP }, (err: Error | null, token: string | undefined) => {
             if (err || !token) {
                 return (reject(err));
             } else {
@@ -74,7 +74,6 @@ TokenSchema.statics.destroy = function (query: any): Promise<any> {
 };
 
 TokenSchema.pre<IToken>('save', function (next: Function) {
-    console.log(this.perms);
     this.sign().then((token: IToken): void => {
         next();
     }).catch((err: any): void => {

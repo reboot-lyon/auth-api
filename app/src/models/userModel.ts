@@ -1,12 +1,11 @@
 import bcrypt from 'bcrypt';
 import { model, Model, Schema, Document } from 'mongoose';
-import { InternalError, IResponse, QueryIdError, AuthPasswdError, AuthEmailError } from '../types';
+import { InternalError, IResponse, QueryIdError, AuthPasswdError, AuthEmailError, InternalApiError } from '../types';
 import { TOKEN_EXP, YUGIOH_URL } from '../config';
-import { getApi } from '../utils';
 import { Token, IToken } from './tokenModel';
 
 export interface IUserSchema extends Document {
-    yugiohId: string,
+    yugiohid: string,
     firstname: string,
     lastname: string,
     email: string,
@@ -27,21 +26,20 @@ interface IUserModel extends Model<IUser> {
     details: (query: any) => Promise<any>,
     edit: (query: any) => Promise<any>,
     auth: (query: any) => Promise<any>,
-    revoke: (query: any) => Promise<any>,
     register: (query: any) => Promise<any>,
     destroy: (query: any) => Promise<any>
 };
 
 export const UserSchema: Schema<IUser> = new Schema<IUser>({
-    yugiohId: { type: String, required: true },
-    firstname: { type: String, lowercase: true, required: true },
-    lastname: { type: String, lowercase: true, required: true },
+    yugiohid: { type: String, required: true },
+    firstname: { type: String, required: true, lowercase: true },
+    lastname: { type: String, required: true, lowercase: true },
     email: { type: String, required: true, lowercase: true },
     phone: { type: String },
     hash: { type: String, required: true },
-    root: { type: Boolean, required: true, default: false },
+    root: { type: Boolean, default: false },
     active: { type: Boolean, required: true, default: false }
-}, { timestamps: true }).index({ firstname: 'text', lastname: 'text', email: 'text', yugiohId: 'text' });
+}, { timestamps: true }).index({ firstname: 'text', lastname: 'text', email: 'text', yugiohid: 'text' });
 
 UserSchema.methods.comparePasswd = function (passwd: string): Promise<any> {
     return (new Promise((resolve: (match: boolean) => void, reject: (err: any) => void): void => {
@@ -98,22 +96,18 @@ UserSchema.statics.details = function (query: any): Promise<any> {
 
 UserSchema.statics.register = function(query: any): Promise<any> {
     return (new Promise((resolve: (id: any) => void, reject: (err: IResponse) => void): void => {
-        getApi(YUGIOH_URL, `/players/${query.yugiohId}`).then((player: any): void => {
-            User.findOne({ email: query.email }).then((user: IUser | null): void => {
-                if (!user && player.firstname === query.firstname && player.lastname === query.lastname) {
-                    new User(query).save().then((user: IUser): void => {
-                        return (resolve({ id: user._id }));
-                    }).catch((err: any): void => {
-                        return (reject(InternalError(err)));
-                    });
-                } else {
-                    return (reject(QueryIdError));
-                }
-            }).catch((err: any): void => {
-                return (reject((InternalError(err))));
-            });
+        User.findOne({ yugiohid: query.yugiohid, email: query.email }).then((user: IUser | null): void => {
+            if (!user) {
+                new User(query).save().then((user: IUser): void => {
+                    return (resolve({ id: user._id }));
+                }).catch((err: any): void => {
+                    return (reject(InternalError(err)));
+                });
+            } else {
+                return (reject(QueryIdError));
+            }
         }).catch((err: any): void => {
-            return (reject(err));
+            return (reject((InternalError(err))));
         });
     }));
 };
@@ -181,28 +175,6 @@ UserSchema.statics.auth = function(query: any): Promise<any> {
                     })
                 }).catch((err: any): void => {
                     return (reject(AuthPasswdError));
-                });
-            }
-        }).catch((err: any): void => {
-            return (reject(InternalError(err)));
-        });
-    }))
-};
-
-UserSchema.statics.revoke = function(query: any): Promise<any> {
-    return (new Promise((resolve: (status: number) => void, reject: (err: IResponse) => void): void => {
-        User.findById(query).then((user: IUser | null): void => {
-            if (!user) {
-                return (reject(QueryIdError));
-            } else {
-                Token.find({ user: user._id }).then((tokens: IToken[]): void => {
-                    const tasks: Promise<any>[] = [];
-                    tokens.forEach(token => tasks.push(token.remove()));
-                    Promise.all(tasks).then((): void => {
-                        return (resolve(200));
-                    }).catch((err: any): void => {
-                        return (reject(InternalError(err)));
-                    });
                 });
             }
         }).catch((err: any): void => {

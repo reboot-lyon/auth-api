@@ -9,6 +9,7 @@ export class AuthController {
         secret: PUB_KEY,
         algorithms: ['RS256'],
         credentialsRequired: true,
+        requestProperty: 'body.user',
         getToken: (req: Request) => {
             return (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer' ? req.headers.authorization.split(' ')[1] : null );
         }
@@ -18,6 +19,7 @@ export class AuthController {
         secret: PUB_KEY,
         algorithms: ['RS256'],
         credentialsRequired: false,
+        requestProperty: 'body.user',
         getToken: (req: Request) => {
             return (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer' ? req.headers.authorization.split(' ')[1] : null );
         }

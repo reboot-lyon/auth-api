@@ -64,7 +64,7 @@ export class QueryAuth {
 
 export class QueryRegister {
 
-    public yugiohId: string = ''
+    public yugiohid: string = ''
     public firstname: string = ''
     public lastname: string = ''
     public email: string = ''
@@ -76,7 +76,7 @@ export class QueryRegister {
         return (new Promise((resolve: (query: any) => void, reject: (err: IResponse) => void): void => {
             recipLookUp(this.validator(), this).then((): void => {
                 const query: any = {
-                    yugiohId: this.yugiohId,
+                    yugiohid: this.yugiohid,
                     firstname: this.firstname,
                     lastname: this.lastname,
                     email: this.email,
@@ -93,7 +93,7 @@ export class QueryRegister {
 
     private validator(): any {
         return ({
-            yugiohId: (yugiohId: string) => yugiohId !== '' ? true : false,
+            yugiohid: (yugiohid: string) => yugiohid !== '' ? true : false,
             firstname: (firstname: string) => firstname !== '' ? true : false,
             lastname: (lastname: string) => lastname !== '' ? true : false,
             email: (email: string) => email !== '' ? true : false,
@@ -234,18 +234,6 @@ export class UserController {
         handShake([req.body], new QueryAuth()).then((recip: any): void => {
             User.auth(recip).then((data: any): void => {
                 res.status(200).json(data);
-            }).catch((err: IResponse): void => {
-                next(err);
-            });
-        }).catch((err: IResponse): void => {
-            next(err);
-        });
-    }
-
-    public revokeHandler(req: Request, res: Response, next: NextFunction): void {
-        handShake([req.params], new QueryId()).then((recip: any): void => {
-            User.revoke(recip).then((status: number): void => {
-                res.sendStatus(status);
             }).catch((err: IResponse): void => {
                 next(err);
             });

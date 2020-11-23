@@ -20,7 +20,6 @@ export default class AuthRoutes {
         this.router.post('/', NoneController, this.userController.registerHandler);
         this.router.post('/auth', this.authController.authHandler, this.userController.authHandler);
         this.router.put('/:id', NoneController, this.userController.editHandler);
-        this.router.delete('/revoke', this.userController.revokeHandler);
         this.router.delete('/:id', this.userController.destroyHandler);
     }
 }
